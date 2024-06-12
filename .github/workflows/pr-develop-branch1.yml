@@ -33,9 +33,18 @@ jobs:
           echo $SFDX_INTEGRATION_URL > auth-url.txt
           sf org login sfdx-url --sfdx-url-file auth-url.txt --alias DevOrg --set-default
 
-      - name: Deploy to Salesforce
+      - name: Determine changed files
+        id: changes
         run: |
-          sf project deploy start --source-dir force-app/main/default --target-org DevOrg
+          echo "Changed files:"
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} > changed_files.txt
+          cat changed_files.txt
+
+      - name: Deploy to Salesforce
+        if: steps.changes.outputs.files != ''
+        run: |
+          changed_files=$(cat changed_files.txt | tr '\n' ',' | sed 's/,$//')
+          sf project deploy start --source-dir $changed_files --target-org DevOrg
 
       - name: Run Tests
         run: |
