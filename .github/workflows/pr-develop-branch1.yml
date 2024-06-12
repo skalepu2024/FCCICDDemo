@@ -33,7 +33,7 @@ jobs:
                   echo "$HOME/sf/bin" >> $GITHUB_PATH
                   ~/sf/bin/sf version
                   ~/sf/bin/sf plugins install @salesforce/sfdx-scanner
-                  echo y | sf plugins install sfdx-git-delta
+                  echo y | ~/sf/bin/sf plugins install sfdx-git-delta
 
       - name: Checkout repository
         uses: actions/checkout@v2
