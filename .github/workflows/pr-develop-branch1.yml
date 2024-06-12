@@ -1,0 +1,41 @@
+name: Deploy Salesforce Code
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install @salesforce/cli --global
+
+      - name: Authenticate with Salesforce
+        env:
+          SFDX_INTEGRATION_URL: ${{ secrets.SFDX_INTEGRATION_URL }}
+        run: |
+          echo $SFDX_INTEGRATION_URL > auth-url.txt
+          sf org login sfdx-url --sfdx-url-file auth-url.txt --alias DevOrg --set-default
+
+      - name: Deploy to Salesforce
+        run: |
+          sf project deploy start --source-dir force-app/main/default --target-org DevOrg
+
+      - name: Run Tests
+        run: |
+          sf apex run test --target-org DevOrg --result-format tap --output-dir test-results --wait 10
+
+      - name: Display Test Results
+        run: cat test-results/test-result.tap
