@@ -8,10 +8,17 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+  
+    env:
+      RED_TEXT: '\033[0;31m'
+      GREEN_TEXT: '\033[0;32m'
+      BLUE_TEXT: '\033[0;34m'
+      YELLOW_TEXT: '\033[1;33m'
+      RESET_TEXT: '\033[0m'
+      FORCE_APP_FOLDER: force-app
+      DEPLOY_FOLDER: deployFolder
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
@@ -25,30 +32,32 @@ jobs:
                   tar xJf sf-linux-x64.tar.xz -C ~/sf --strip-components 1
                   echo "$HOME/sf/bin" >> $GITHUB_PATH
                   ~/sf/bin/sf version
+                  ~/sf/bin/sf plugins install @salesforce/sfdx-scanner
+                  ~/sf/bin/sf plugins install sfdx-git-delta
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Compare changes to Develop Branch
+        run: |
+          mkdir -p ${{ env.DEPLOY_FOLDER }}
+          ~/sf/bin/sf sgd:source:delta --from origin/develop --to HEAD --output ${{ env.DEPLOY_FOLDER }} --generate-delta --source ${{ env.FORCE_APP_FOLDER}}/ --ignore ./build-settings/deployIgnore --ignore-destructive ./build-settings/destructiveIgnore
+
 
       - name: Authenticate with Salesforce
         env:
           SFDX_INTEGRATION_URL: ${{ secrets.SFDX_INTEGRATION_URL }}
         run: |
           echo $SFDX_INTEGRATION_URL > auth-url.txt
-          sf org login sfdx-url --sfdx-url-file auth-url.txt --alias DevOrg --set-default
-
-      - name: Determine changed files
-        id: changes
-        run: |
-          echo "Changed files:"
-          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} > changed_files.txt
-          cat changed_files.txt
+          sf org login sfdx-url --sfdx-url-file auth-url.txt --alias DeployOrg --set-default
 
       - name: Deploy to Salesforce
-        if: steps.changes.outputs.files != ''
-        run: |
-          changed_files=$(cat changed_files.txt | tr '\n' ',' | sed 's/,$//')
-          sf project deploy start --source-dir $changed_files --target-org DevOrg
-
+        run:  |
+          sf project deploy preview --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml --post-destructive-changes ${{ env.DEPLOY_FOLDER }}/destructiveChanges/destructiveChanges.xml  -o ${{ vars.SF_USERNAME }}
+      
       - name: Run Tests
         run: |
-          sf apex run test --target-org DevOrg --result-format tap --output-dir test-results --wait 10
+          sf apex run test --target-org DeployOrg --result-format tap --output-dir test-results --wait 10
 
       - name: Display Test Results
         run: cat test-results/test-result.tap

@@ -1,0 +1,58 @@
+name: Generate Delta
+
+on:
+  workflow_call:
+    inputs:
+      stage:
+        description: "The stage to run against"
+        default: "dev"
+        required: false
+        type: string
+
+env:
+  SERVICE_NAME: external-sf-poc
+  NODE_VERSION: 18
+  SLACK_CHANNEL: independents-monitor
+
+jobs:
+  test:
+    name: Generate Delta
+    concurrency:
+      group: delta-${{ github.ref }}
+      cancel-in-progress: true
+
+    runs-on:
+      - self-hosted
+      - independents-nonprod-build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout target
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Install SGD
+        run: echo y | npx sf plugins:install "sfdx-git-delta"
+
+      - name: Generate Delta
+        run: mkdir changes && npx sf sgd:source:delta --to HEAD --from origin/${{ github.base_ref }} --output changes --generate-delta
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+            name: delta
+            path: changes
+
+      

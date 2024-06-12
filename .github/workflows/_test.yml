@@ -1,0 +1,48 @@
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      stage:
+        description: "The stage to run against"
+        default: "dev"
+        required: false
+        type: string
+
+env:
+  SERVICE_NAME: external-sf-poc
+  NODE_VERSION: 18
+  SLACK_CHANNEL: independents-monitor
+
+jobs:
+  test:
+    name: Test
+    concurrency:
+      group: test-${{ github.ref }}
+      cancel-in-progress: true
+
+    runs-on:
+      - self-hosted
+      - independents-nonprod-deploy
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Lint
+        # skip for now
+        if: false
+        run: npm run lint
+
+      - name: Test Backend
+        run: npm run test:ci
