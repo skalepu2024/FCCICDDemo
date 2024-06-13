@@ -63,4 +63,4 @@ jobs:
           sf apex run test --target-org DeployOrg --result-format tap --output-dir test-results --wait 10
 
       - name: Display Test Results
-        run: cat test-results/test-result.tap
+        run: echo $(cat test-results/test-result.txt)
