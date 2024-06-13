@@ -43,12 +43,7 @@ jobs:
         run: |
               git fetch origin ${{ github.base_ref }} --depth 1
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-              node-version: ${{ env.NODE_VERSION }}
-              cache: "npm"
-              cache-dependency-path: "**/package-lock.json"
+      
 
       - name: Install Dependencies
         run: npm install
