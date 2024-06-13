@@ -1,4 +1,4 @@
-name: Deploy Salesforce Code to Develop
+name: Deploy Salesforce Code
 
 on:
   pull_request:
@@ -17,7 +17,6 @@ jobs:
       RESET_TEXT: '\033[0m'
       FORCE_APP_FOLDER: force-app
       DEPLOY_FOLDER: deployFolder
-      NODE_VERSION : '6.14.18'
 
     steps:
 
@@ -28,23 +27,22 @@ jobs:
 
       - name: 'Install Salesforce CLI'
         run: |
-                   wget https://developer.salesforce.com/media/salesforce-cli/sf/channels/stable/sf-linux-x64.tar.xz
-                   mkdir ~/sf
-                   tar xJf sf-linux-x64.tar.xz -C ~/sf --strip-components 1
-                   echo "$HOME/sf/bin" >> $GITHUB_PATH
-                   ~/sf/bin/sf version
-                   ~/sf/bin/sf plugins install @salesforce/sfdx-scanner
-                   echo y | ~/sf/bin/sf plugins install sfdx-git-delta
+                  wget https://developer.salesforce.com/media/salesforce-cli/sf/channels/stable/sf-linux-x64.tar.xz
+                  mkdir ~/sf
+                  tar xJf sf-linux-x64.tar.xz -C ~/sf --strip-components 1
+                  echo "$HOME/sf/bin" >> $GITHUB_PATH
+                  ~/sf/bin/sf version
+                  ~/sf/bin/sf plugins install @salesforce/sfdx-scanner
+                  ~/sf/bin/sf plugins install sfdx-git-delta
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Checkout target
+      - name: Compare changes to Develop Branch
         run: |
-              git fetch origin ${{ github.base_ref }} --depth 1
+          mkdir -p ${{ env.DEPLOY_FOLDER }}
+          ~/sf/bin/sf sgd:source:delta --from origin/develop --to HEAD --output ${{ env.DEPLOY_FOLDER }} --generate-delta --source ${{ env.FORCE_APP_FOLDER}}/ --ignore ./build-settings/deployIgnore --ignore-destructive ./build-settings/destructiveIgnore
 
-      - name: Generate Delta
-        run: mkdir ${{ env.DEPLOY_FOLDER }} && npx sf sgd:source:delta --to HEAD --from origin/${{ github.base_ref }} --output ${{ env.DEPLOY_FOLDER }} --generate-delta
 
       - name: Authenticate with Salesforce
         env:
@@ -55,8 +53,7 @@ jobs:
 
       - name: Deploy to Salesforce
         run:  |
-          echo $(cat  ${{ env.DEPLOY_FOLDER }}/package/package.xml )
-          sf project deploy start --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml 
+          sf project deploy preview --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml --post-destructive-changes ${{ env.DEPLOY_FOLDER }}/destructiveChanges/destructiveChanges.xml  -o ${{ vars.SF_USERNAME }}
       
       - name: Run Tests
         run: |
