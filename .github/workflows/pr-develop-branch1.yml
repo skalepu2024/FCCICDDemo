@@ -25,24 +25,38 @@ jobs:
         with:
           node-version: '14'
 
-      - name: 'Install Salesforce CLI test'
+#      - name: 'Install Salesforce CLI'
+#        run: |
+#                  wget https://developer.salesforce.com/media/salesforce-cli/sf/channels/stable/sf-linux-x64.tar.xz
+#                  mkdir ~/sf
+#                  tar xJf sf-linux-x64.tar.xz -C ~/sf --strip-components 1
+#                  echo "$HOME/sf/bin" >> $GITHUB_PATH
+#                  ~/sf/bin/sf version
+#                  ~/sf/bin/sf plugins install @salesforce/sfdx-scanner
+#                  echo y | ~/sf/bin/sf plugins install sfdx-git-delta
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout target
         run: |
-                  wget https://developer.salesforce.com/media/salesforce-cli/sf/channels/stable/sf-linux-x64.tar.xz
-                  mkdir ~/sf
-                  tar xJf sf-linux-x64.tar.xz -C ~/sf --strip-components 1
-                  echo "$HOME/sf/bin" >> $GITHUB_PATH
-                  ~/sf/bin/sf version
-                  ~/sf/bin/sf plugins install @salesforce/sfdx-scanner
-                  echo y | ~/sf/bin/sf plugins install sfdx-git-delta
+              git fetch origin ${{ github.base_ref }} --depth 1
 
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+              node-version: ${{ env.NODE_VERSION }}
+              cache: "npm"
+              cache-dependency-path: "**/package-lock.json"
 
-      - name: Compare changes to Develop Branch
-        run: |
-          mkdir -p ${{ env.DEPLOY_FOLDER }}
-          sf sgd:source:delta --from origin/develop --to HEAD --output ${{ env.DEPLOY_FOLDER }} --generate-delta --source ${{ env.FORCE_APP_FOLDER}}/ --ignore ./build-settings/deployIgnore --ignore-destructive ./build-settings/destructiveIgnore
+      - name: Install Dependencies
+        run: npm install
 
+      - name: Install SGD
+        run: echo y | npx sf plugins:install "sfdx-git-delta"
+
+      - name: Generate Delta
+        run: mkdir changes && npx sf sgd:source:delta --to HEAD --from origin/${{ github.base_ref }} --output changes --generate-delta
 
       - name: Authenticate with Salesforce
         env:
