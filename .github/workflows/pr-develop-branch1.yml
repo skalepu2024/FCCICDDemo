@@ -17,6 +17,7 @@ jobs:
       RESET_TEXT: '\033[0m'
       FORCE_APP_FOLDER: force-app
       DEPLOY_FOLDER: deployFolder
+      NODE_VERSION : '6.14.18'
 
     steps:
 
