@@ -55,7 +55,7 @@ jobs:
 
       - name: Deploy to Salesforce
         run:  |
-          sf project deploy preview --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml --post-destructive-changes ${{ env.DEPLOY_FOLDER }}/destructiveChanges/destructiveChanges.xml  -o ${{ vars.SF_USERNAME }}
+          sf project deploy preview --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml --postdestructivechanges ${{ env.DEPLOY_FOLDER }}/destructiveChanges/destructiveChanges.xml  -o ${{ vars.SF_USERNAME }}
       
       - name: Run Tests
         run: |
