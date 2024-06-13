@@ -55,7 +55,7 @@ jobs:
 
       - name: Deploy to Salesforce
         run:  |
-          echo < ${{ env.DEPLOY_FOLDER }}/package/package.xml 
+          echo $(cat  ${{ env.DEPLOY_FOLDER }}/package/package.xml )
           sf project deploy preview --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml 
       
       - name: Run Tests
