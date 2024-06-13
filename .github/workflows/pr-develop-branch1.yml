@@ -44,7 +44,7 @@ jobs:
               git fetch origin ${{ github.base_ref }} --depth 1
 
       - name: Generate Delta
-        run: mkdir changes && npx sf sgd:source:delta --to HEAD --from origin/${{ github.base_ref }} --output changes --generate-delta
+        run: mkdir ${{ env.DEPLOY_FOLDER }} && npx sf sgd:source:delta --to HEAD --from origin/${{ github.base_ref }} --output ${{ env.DEPLOY_FOLDER }} --generate-delta
 
       - name: Authenticate with Salesforce
         env:
