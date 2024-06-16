@@ -3,7 +3,7 @@ name: Deploy Salesforce Code to Develop
 on:
   pull_request:
     branches:
-      - develop
+      - develop1
 
 jobs:
   deploy:
@@ -61,11 +61,5 @@ jobs:
         run:  |
           sf project deploy validate --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml
       
-      - name: Deploy to Salesforce
-        run:  |
-          echo $(cat  ${{ env.DEPLOY_FOLDER }}/package/package.xml )
-          sf project deploy start --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml --test-level RunLocalTests
-      
-
       - name: Display Test Results
         run: echo $(cat test-results/test-result.txt)
