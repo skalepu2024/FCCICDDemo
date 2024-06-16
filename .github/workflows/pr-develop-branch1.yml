@@ -53,14 +53,19 @@ jobs:
           echo $SFDX_INTEGRATION_URL > auth-url.txt
           sf org login sfdx-url --sfdx-url-file auth-url.txt --alias DeployOrg --set-default
 
-      - name: Deploy to Salesforce
-        run:  |
-          echo $(cat  ${{ env.DEPLOY_FOLDER }}/package/package.xml )
-          sf project deploy start --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml 
-      
       - name: Run Tests
         run: |
           sf apex run test --target-org DeployOrg --result-format tap --output-dir test-results --wait 10
+
+      - name: Validate Deploy 
+        run:  |
+          sf project deploy validate --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml
+      
+      - name: Deploy to Salesforce
+        run:  |
+          echo $(cat  ${{ env.DEPLOY_FOLDER }}/package/package.xml )
+          sf project deploy start --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml --test-level RunLocalTests
+      
 
       - name: Display Test Results
         run: echo $(cat test-results/test-result.txt)
