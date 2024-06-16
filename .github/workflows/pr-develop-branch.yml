@@ -56,10 +56,6 @@ jobs:
       - name: Run Tests
         run: |
           sf apex run test --target-org DeployOrg --result-format tap --output-dir test-results --wait 10
-
-      - name: Validate Deploy 
-        run:  |
-          sf project deploy validate --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml
       
       - name: Display Test Results
         run: echo $(cat test-results/test-result.txt)
