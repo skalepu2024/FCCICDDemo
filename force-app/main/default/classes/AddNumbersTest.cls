@@ -11,7 +11,7 @@ private class AddNumbersTest {
         Integer result = AddNumbers.addTwoNumbers(num1, num2);
         
         // Verify the result
-        System.assertEquals(112, result, 'The addition of 5 and 7 should be 12');
+        System.assertEquals(111, result, 'The addition of 5 and 7 should be 12');
         
         // Additional test case
         num1 = -3;
