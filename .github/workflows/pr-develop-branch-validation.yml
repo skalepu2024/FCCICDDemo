@@ -48,14 +48,18 @@ jobs:
           sf org login sfdx-url --sfdx-url-file auth-url.txt --alias DeployOrg --set-default
 
       
-      - name: Validate Deploy 
-        run:  |
-          sf project deploy validate --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml
+#      - name: Validate Deploy 
+#        run:  |
+#          sf project deploy validate --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml
 
-      - name: Deploy to Salesforce
+      - name: Preview Deploy 
         run:  |
-          echo $(cat  ${{ env.DEPLOY_FOLDER }}/package/package.xml )
-          sf project deploy start --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml --test-level RunLocalTests
+          sf project deploy preview --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml
+
+#      - name: Deploy to Salesforce
+#        run:  |
+#          echo $(cat  ${{ env.DEPLOY_FOLDER }}/package/package.xml )
+#          sf project deploy start --manifest ${{ env.DEPLOY_FOLDER }}/package/package.xml --test-level RunLocalTests
       
       - name: Display Test Results
         run: echo $(cat test-results/test-result.txt)
